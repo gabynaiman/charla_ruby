@@ -1,0 +1,3 @@
+require 'banking'
+
+include Bank

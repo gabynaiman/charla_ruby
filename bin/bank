@@ -1,0 +1,66 @@
+#!/usr/bin/env ruby
+require 'thor'
+require 'yaml'
+require '../lib/banking'
+
+class BankClient < Thor
+
+  desc 'create_account', 'Create a new account'
+  def create_account
+    id = Time.now.to_i.to_s
+    bank.create_account id
+    save
+    puts "Account #{id} created"
+  end
+
+  desc 'deposit ACCOUNT_ID AMOUNT', 'Deposit into account'
+  def deposit(account_id, amount)
+    bank.accounts[account_id].deposit amount.to_f
+    save
+    puts "Transaction OK"
+  end
+
+  desc 'extract ACCOUNT_ID AMOUNT', 'Extract from account'
+  def extract(account_id, amount)
+    bank.accounts[account_id].extract amount.to_f
+    save
+    puts "Transaction OK"
+  end
+
+  desc 'transactions ACCOUNT_ID', 'List all account transactions'
+  def transactions(account_id)
+    bank.accounts[account_id].transactions.each do |transaction|
+      puts "#{transaction.class.to_s.split('::')[1].ljust(15, ' ')}$ #{transaction.amount.to_s}"
+    end
+  end
+
+  desc 'balance ACCOUNT_ID', 'Show account balance'
+  def balance(account_id)
+    puts bank.accounts[account_id].balance
+  end
+
+  desc 'accounts', 'List all account'
+  def accounts
+    bank.accounts.each do |id, account|
+      puts "#{id.ljust(15, ' ')} $ #{account.balance}"
+    end
+  end
+
+  private
+
+  def bank
+    return @bank if @bank
+    @bank = File.exists?(file) ? YAML::load_file(file) : Banking::Bank.new
+  end
+
+  def save
+    File.open(file, 'w') { |f| f.puts bank.to_yaml }
+  end
+
+  def file
+    "#{File.dirname(__FILE__)}/banking.yml"
+  end
+
+end
+
+BankClient.start

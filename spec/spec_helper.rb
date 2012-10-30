@@ -1,3 +1,3 @@
 require 'banking'
 
-include Bank
+include Banking
